@@ -1,4 +1,5 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import axios from "axios";
 import styled from "styled-components";
 import moment from "moment";
 
@@ -125,8 +126,22 @@ const tempData = {
 
 function Calendar() {
   const [date, setDate] = useState(moment());
+  const [account, setAccount] = useState([]);
+  const [total, setTotal] = useState(0);
 
-  const onClickDay = useCallback((date) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await axios.get("http://localhost:5000/account", {
+        params: { date: date.format("YYYY-MM") },
+      });
+
+      setAccount(response.data);
+    };
+
+    fetchData();
+  }, [date]);
+
+  const onClickDay = useCallback(async (date) => {
     console.log(date);
   }, []);
 
@@ -165,7 +180,7 @@ function Calendar() {
                   <span className={`date ${isGrayed} ${isSelected}`}>
                     {current.format("D")}
                   </span>
-                  {tempData.history.map((n, i) =>
+                  {account.map((n, i) =>
                     n.date === current.format("YYYY-MM-DD") ? (
                       <History key={n.date} credit={n.credit} debit={n.debit} />
                     ) : null
