@@ -141,6 +141,14 @@ function Calendar() {
     fetchData();
   }, [date]);
 
+  const onClickPrevMonth = useCallback(() => {
+    setDate(date.clone().add(-1, "month"));
+  }, [date]);
+
+  const onClickNextMonth = useCallback(() => {
+    setDate(date.clone().add(1, "month"));
+  }, [date]);
+
   const onClickDay = useCallback(async (date) => {
     console.log(date);
   }, []);
@@ -199,11 +207,17 @@ function Calendar() {
     <div>
       <CalendarHeader>
         <span>
-          <FontAwesomeIcon icon={faChevronCircleLeft} />
+          <FontAwesomeIcon
+            icon={faChevronCircleLeft}
+            onClick={onClickPrevMonth}
+          />
         </span>
         <h3>{date.format("YYYY-MM")}</h3>
         <span>
-          <FontAwesomeIcon icon={faChevronCircleRight} />
+          <FontAwesomeIcon
+            icon={faChevronCircleRight}
+            onClick={onClickNextMonth}
+          />
         </span>
       </CalendarHeader>
       <CalendarBody>
