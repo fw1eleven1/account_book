@@ -14,6 +14,8 @@ const Row = styled.div`
 `;
 
 function History({ credit, debit }) {
+  // credit: 입금
+  // debit: 지출
   return (
     <div>
       <Row>
