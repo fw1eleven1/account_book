@@ -16,10 +16,20 @@ app.get('/', (req, res) => {
 
 app.get('/account', (req, res) => {
   const date = req.query.date;
-  connection.query('SELECT * FROM account WHERE DATE_FORMAT(date, "%Y-%m") = ?', [date], (err, rows, fields) => {
+  connection.query('SELECT date, SUM(credit) AS credit, SUM(debit) AS debit FROM account WHERE DATE_FORMAT(date, "%Y-%m") = ? GROUP BY date', [date], (err, rows, fields) => {
     if (err) throw err;
     res.json(rows);
   });
+})
+
+app.get('/account/:date', (req, res) => {
+  console.log(req.params.date);
+  const date = req.params.date;
+  connection.query('SELECT * FROM account WHERE DATE_FORMAT(date, "%Y-%m-%d") = ?', [date], (err, rows, fields) => {
+    if (err) throw err;
+    console.log(rows);
+    res.json(rows)
+  })
 })
 
 app.get('/users', (req, res) => {
