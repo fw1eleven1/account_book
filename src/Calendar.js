@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useReducer, useState } from "react";
 import axios from "axios";
 import styled from "styled-components";
 import moment from "moment";
+// import reducer, { CHANGE_ACCOUNT } from "./reducer";
 
 // font awesome
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,9 +11,14 @@ import {
   faChevronCircleRight,
 } from "@fortawesome/free-solid-svg-icons";
 import History from "./History";
+import Modal from "./Modal";
+import AddModal from "./AddModal";
 
 const CalendarHeader = styled.div`
+  position: relative;
+  width: 700px;
   text-align: center;
+  margin: 0 auto;
   padding: 10px 0;
   font-size: 1.5em;
 
@@ -28,6 +34,18 @@ const CalendarHeader = styled.div`
   FontAwesomeIcon {
     cursor: pointer;
   }
+`;
+
+const AddButton = styled.button`
+  position: absolute;
+  top: 15px;
+  right: 0;
+  width: 50px;
+  padding: 5px;
+  border: 1px solid #bbb;
+  border-radius: 15px;
+  background-color: #fff;
+  cursor: pointer;
 `;
 
 const CalendarBody = styled.div`
@@ -90,45 +108,25 @@ const Day = styled.div`
   }
 `;
 
-const tempData = {
-  history: [
-    {
-      date: "2022-01-01",
-      credit: "10000",
-      debit: "1000",
-    },
-    {
-      date: "2022-01-03",
-      credit: "0",
-      debit: "10000",
-    },
-    {
-      date: "2022-01-07",
-      credit: "0",
-      debit: "250",
-    },
-    {
-      date: "2022-01-08",
-      credit: "500",
-      debit: "5000",
-    },
-    {
-      date: "2022-01-11",
-      credit: "12000",
-      debit: "0",
-    },
-  ],
-  total: {
-    credit: "22500",
-    debit: "16250",
-  },
-};
+const Backdrop = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9000;
+  background-color: rgba(0, 0, 0, 0.6);
+`;
 
 function Calendar() {
   const [date, setDate] = useState(moment());
   const [account, setAccount] = useState([]);
   const [total, setTotal] = useState(0);
+  const [isOpened, setIsOpened] = useState(false);
+  const [isAddOpened, setIsAddOpened] = useState(false);
+  const [modalDate, setModalDate] = useState();
 
+  // 페이지 진입 시 현재 월의 전체 데이터 가져오기
   useEffect(() => {
     const fetchData = async () => {
       const response = await axios.get("http://localhost:5000/account", {
@@ -141,18 +139,33 @@ function Calendar() {
     fetchData();
   }, [date]);
 
+  // 이전 달 이동
   const onClickPrevMonth = useCallback(() => {
     setDate(date.clone().add(-1, "month"));
   }, [date]);
 
+  // 다음 달 이동
   const onClickNextMonth = useCallback(() => {
     setDate(date.clone().add(1, "month"));
   }, [date]);
 
+  // 날짜 클릭 시 모달창 호출
   const onClickDay = useCallback(async (date) => {
-    console.log(date);
+    setModalDate(date);
+    setIsOpened(true);
   }, []);
 
+  // 모달창 닫기
+  const onClickCloseModal = useCallback(() => {
+    setIsOpened(false);
+    setIsAddOpened(false);
+  }, []);
+
+  const onClickAddAccount = useCallback(() => {
+    setIsAddOpened(true);
+  }, []);
+
+  // 달력 생성 함수
   const generate = () => {
     const today = date;
     const startWeek = today.clone().startOf("month").week();
@@ -174,7 +187,7 @@ function Calendar() {
                 .startOf("week")
                 .add(i, "day");
               let isSelected =
-                today.format("YYYYMMDD") === current.format("YYYYMMDD")
+                moment().format("YYYYMMDD") === current.format("YYYYMMDD")
                   ? "selected"
                   : "";
               let isGrayed =
@@ -183,11 +196,12 @@ function Calendar() {
               return (
                 <Day
                   key={i}
-                  onClick={() => onClickDay(current.format("YYYYMMDD"))}
+                  onClick={() => onClickDay(current.format("YYYY-MM-DD"))}
                 >
                   <span className={`date ${isGrayed} ${isSelected}`}>
                     {current.format("D")}
                   </span>
+                  {/* 입금/지출 내역 있을 시 표시 */}
                   {account.map((n, i) =>
                     n.date === current.format("YYYY-MM-DD") ? (
                       <History key={n.date} credit={n.credit} debit={n.debit} />
@@ -204,33 +218,50 @@ function Calendar() {
   };
 
   return (
-    <div>
-      <CalendarHeader>
-        <span>
-          <FontAwesomeIcon
-            icon={faChevronCircleLeft}
-            onClick={onClickPrevMonth}
-          />
-        </span>
-        <h3>{date.format("YYYY-MM")}</h3>
-        <span>
-          <FontAwesomeIcon
-            icon={faChevronCircleRight}
-            onClick={onClickNextMonth}
-          />
-        </span>
-      </CalendarHeader>
-      <CalendarBody>
-        <div>
-          {Array("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT").map(
-            (n, i) => (
-              <Weekname key={i}>{n}</Weekname>
-            )
-          )}
-        </div>
-        <div>{generate()}</div>
-      </CalendarBody>
-    </div>
+    <>
+      <div>
+        <CalendarHeader>
+          <span>
+            <FontAwesomeIcon
+              icon={faChevronCircleLeft}
+              onClick={onClickPrevMonth}
+            />
+          </span>
+          <h3>{date.format("YYYY-MM")}</h3>
+          <span>
+            <FontAwesomeIcon
+              icon={faChevronCircleRight}
+              onClick={onClickNextMonth}
+            />
+          </span>
+          <AddButton type="button" onClick={onClickAddAccount}>
+            추가
+          </AddButton>
+        </CalendarHeader>
+        <CalendarBody>
+          <div>
+            {Array("SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT").map(
+              (n, i) => (
+                <Weekname key={i}>{n}</Weekname>
+              )
+            )}
+          </div>
+          <div>{generate()}</div>
+        </CalendarBody>
+      </div>
+      {isOpened && (
+        <>
+          <Backdrop onClick={onClickCloseModal}></Backdrop>
+          <Modal modalDate={modalDate} />
+        </>
+      )}
+      {isAddOpened && (
+        <>
+          <Backdrop onClick={onClickCloseModal}></Backdrop>
+          <AddModal />
+        </>
+      )}
+    </>
   );
 }
 
