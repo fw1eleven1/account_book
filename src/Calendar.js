@@ -137,7 +137,7 @@ function Calendar() {
     };
 
     fetchData();
-  }, [date]);
+  }, [date, account]);
 
   // 이전 달 이동
   const onClickPrevMonth = useCallback(() => {
@@ -258,7 +258,11 @@ function Calendar() {
       {isAddOpened && (
         <>
           <Backdrop onClick={onClickCloseModal}></Backdrop>
-          <AddModal />
+          <AddModal
+            account={account}
+            setAccount={setAccount}
+            onClickCloseModal={onClickCloseModal}
+          />
         </>
       )}
     </>
