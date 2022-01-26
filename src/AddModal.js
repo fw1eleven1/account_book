@@ -1,5 +1,10 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
+import axios from "axios";
 import styled from "styled-components";
+import moment from "moment";
+import Datepicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import "./css/datepicker.css";
 
 const ModalStyle = styled.div`
   position: absolute;
@@ -56,9 +61,58 @@ const Button = styled.div`
   }
 `;
 
-function AddModal(params) {
-  const onClickSubmit = useCallback(() => {}, []);
-  const onClickCancel = useCallback(() => {}, []);
+function AddModal({ account, setAccount, onClickCloseModal }) {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [accountData, setAccountData] = useState({
+    type: "credit",
+    amount: 0,
+    description: "",
+  });
+  const [savedAccount, setSavedAccount] = useState({
+    date: "",
+    credit: "",
+    debit: "",
+  });
+
+  const onChangeData = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      setAccountData({
+        ...accountData,
+        [name]: value,
+      });
+    },
+    [accountData]
+  );
+
+  const onClickSubmit = useCallback(async () => {
+    const date = moment(selectedDate).format("YYYY-MM-DD");
+    const data = {
+      ...accountData,
+      date: date,
+    };
+
+    const response = await axios.post(
+      "http://localhost:5000/account/save",
+      data
+    );
+
+    if (response.data === "OK") {
+      setSavedAccount({
+        ...savedAccount,
+        date: date,
+        [accountData.type]: accountData.amount,
+      });
+
+      setAccount([...account, savedAccount]);
+
+      onClickCancel();
+    }
+  }, [account, savedAccount, accountData, selectedDate]);
+
+  const onClickCancel = useCallback(() => {
+    onClickCloseModal(false);
+  }, [onClickCloseModal]);
 
   return (
     <>
@@ -71,19 +125,23 @@ function AddModal(params) {
         </Row>
         <Row>
           <Col>
-            <input type="text" />
+            <Datepicker
+              selected={selectedDate}
+              onChange={(date) => setSelectedDate(date)}
+              dateFormat="yyyy-MM-dd"
+            />
           </Col>
           <Col>
-            <select>
+            <select name="type" onChange={onChangeData}>
               <option value="credit">입금</option>
               <option value="debit">지출</option>
             </select>
           </Col>
           <Col>
-            <input type="text" />
+            <input type="text" name="amount" onChange={onChangeData} />
           </Col>
           <Col>
-            <input type="text" />
+            <input type="text" name="description" onChange={onChangeData} />
           </Col>
         </Row>
         <ButtonWrap>
