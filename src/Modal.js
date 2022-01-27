@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import styled from "styled-components";
+import { MdDelete } from "react-icons/md";
 
 const ModalStyle = styled.div`
   position: absolute;
@@ -34,10 +35,32 @@ const ModalFooter = styled.div`
   }
 `;
 
-const AccountHeader = styled.div`
-  font-weight: 700;
+const DeleteIcon = styled.span`
+  position: absolute;
+  display: none;
+  top: 4px;
+  right: 0;
+  width: 25px;
+  height: 25px;
+  color: #a1a1a1;
+  cursor: pointer;
 `;
-const AccountList = styled.div``;
+
+const AccountList = styled.div`
+  position: relative;
+
+  :first-child {
+    font-weight: 700;
+  }
+
+  & ~ &:hover {
+    background-color: #e1e1e1;
+    ${DeleteIcon} {
+      display: initial;
+    }
+  }
+`;
+
 const AccountItem = styled.div`
   display: inline-block;
   width: calc(100% / 3);
@@ -45,8 +68,9 @@ const AccountItem = styled.div`
   padding: 3px 0;
 `;
 
-function Modal({ modalDate }) {
+function Modal({ setAccount, modalDate }) {
   const [accountDetail, setAccountDetail] = useState([]);
+  const [isMouseOverDelete, setIsMouseOverDelete] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,7 +82,23 @@ function Modal({ modalDate }) {
     };
 
     fetchData();
-  }, [modalDate]);
+  }, [modalDate, accountDetail]);
+
+  const onClickDelete = useCallback(async (id) => {
+    const response = await axios.delete("http://localhost:5000/account", {
+      data: {
+        accountId: id,
+      },
+    });
+
+    if (response.data === "OK") {
+      const response = await axios.get("http://localhost:5000/account", {
+        params: { date: modalDate.format("YYYY-MM") },
+      });
+
+      setAccount(response.data);
+    }
+  }, []);
 
   return (
     <>
@@ -69,16 +109,19 @@ function Modal({ modalDate }) {
         ) : (
           <>
             <ModalBody>
-              <AccountHeader>
+              <AccountList>
                 <AccountItem>입금</AccountItem>
                 <AccountItem>지출</AccountItem>
                 <AccountItem>내역</AccountItem>
-              </AccountHeader>
+              </AccountList>
               {accountDetail.map((n, i) => (
-                <AccountList>
+                <AccountList key={n.id}>
                   <AccountItem>{n.credit} 원</AccountItem>
                   <AccountItem>{n.debit} 원</AccountItem>
                   <AccountItem>{n.description}</AccountItem>
+                  <DeleteIcon onClick={() => onClickDelete(n.id)}>
+                    <MdDelete />
+                  </DeleteIcon>
                 </AccountList>
               ))}
             </ModalBody>

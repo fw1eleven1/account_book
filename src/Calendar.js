@@ -252,7 +252,7 @@ function Calendar() {
       {isOpened && (
         <>
           <Backdrop onClick={onClickCloseModal}></Backdrop>
-          <Modal modalDate={modalDate} />
+          <Modal setAccount={setAccount} modalDate={modalDate} />
         </>
       )}
       {isAddOpened && (

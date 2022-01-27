@@ -41,6 +41,13 @@ app.post('/account/save', (req, res) => {
   })
 })
 
+app.delete('/account', (req, res) => {
+  connection.query('DELETE FROM account WHERE id = ?', [req.body.accountId], (err, results) => {
+    if (err) throw err;
+    res.status(200).send('OK');
+  })
+})
+
 app.get('/users', (req, res) => {
   connection.query('SELECT * FROM users', (err, rows, fields) => {
     if (err) throw err;
