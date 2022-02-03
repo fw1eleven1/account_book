@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useReducer, useState } from "react";
 import axios from "axios";
 import styled from "styled-components";
 import moment from "moment";
-// import reducer, { CHANGE_ACCOUNT } from "./reducer";
 
 // font awesome
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -10,9 +9,12 @@ import {
   faChevronCircleLeft,
   faChevronCircleRight,
 } from "@fortawesome/free-solid-svg-icons";
+
 import History from "./History";
 import Modal from "./Modal";
 import AddModal from "./AddModal";
+
+import { useAccountDispatch, useAccountState } from "./AccountContext";
 
 const CalendarHeader = styled.div`
   position: relative;
@@ -88,7 +90,7 @@ const Day = styled.div`
 
   .date {
     position: absolute;
-    padding: 2px 3px;
+    padding: 2px 5px;
     top: 2px;
     right: 2px;
   }
@@ -101,6 +103,8 @@ const Day = styled.div`
     background-color: #f00;
     border-radius: 25px;
     color: #fff;
+    width: 15px;
+    text-align: center;
   }
 
   :last-child {
@@ -120,12 +124,13 @@ const Backdrop = styled.div`
 
 function Calendar() {
   const [date, setDate] = useState(moment());
-  const [account, setAccount] = useState([]);
   const [total, setTotal] = useState(0);
   const [isOpened, setIsOpened] = useState(false);
   const [isAddOpened, setIsAddOpened] = useState(false);
   const [modalDate, setModalDate] = useState();
 
+  const dispatch = useAccountDispatch();
+  const state = useAccountState();
   // 페이지 진입 시 현재 월의 전체 데이터 가져오기
   useEffect(() => {
     const fetchData = async () => {
@@ -133,11 +138,11 @@ function Calendar() {
         params: { date: date.format("YYYY-MM") },
       });
 
-      setAccount(response.data);
+      dispatch({ type: "SET", account: response.data });
     };
 
     fetchData();
-  }, [date, account]);
+  }, [date, dispatch]);
 
   // 이전 달 이동
   const onClickPrevMonth = useCallback(() => {
@@ -202,7 +207,7 @@ function Calendar() {
                     {current.format("D")}
                   </span>
                   {/* 입금/지출 내역 있을 시 표시 */}
-                  {account.map((n, i) =>
+                  {state.map((n, i) =>
                     n.date === current.format("YYYY-MM-DD") ? (
                       <History key={n.date} credit={n.credit} debit={n.debit} />
                     ) : null
@@ -252,17 +257,13 @@ function Calendar() {
       {isOpened && (
         <>
           <Backdrop onClick={onClickCloseModal}></Backdrop>
-          <Modal setAccount={setAccount} modalDate={modalDate} />
+          <Modal modalDate={modalDate} />
         </>
       )}
       {isAddOpened && (
         <>
           <Backdrop onClick={onClickCloseModal}></Backdrop>
-          <AddModal
-            account={account}
-            setAccount={setAccount}
-            onClickCloseModal={onClickCloseModal}
-          />
+          <AddModal onClickCloseModal={onClickCloseModal} />
         </>
       )}
     </>
