@@ -77,7 +77,7 @@ function Modal({ modalDate }) {
   useEffect(() => {
     const fetchData = async () => {
       const response = await axios.get(
-        `http://localhost:5000/account/${modalDate}`
+        `http://193.122.105.156:5000/account/${modalDate}`
       );
 
       setAccountDetail(response.data);
@@ -88,18 +88,24 @@ function Modal({ modalDate }) {
 
   const onClickDelete = useCallback(
     async (id) => {
-      const response = await axios.delete("http://localhost:5000/account", {
-        data: {
-          accountId: id,
-        },
-      });
+      const response = await axios.delete(
+        "http://193.122.105.156:5000/account",
+        {
+          data: {
+            accountId: id,
+          },
+        }
+      );
 
       if (response.data === "OK") {
         setAccountDetail(accountDetail.filter((account) => account.id !== id));
 
-        const response = await axios.get("http://localhost:5000/account", {
-          params: { date: moment().format("YYYY-MM") },
-        });
+        const response = await axios.get(
+          "http://193.122.105.156:5000/account",
+          {
+            params: { date: moment().format("YYYY-MM") },
+          }
+        );
 
         dispatch({ type: "SET", account: response.data });
       }

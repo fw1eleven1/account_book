@@ -96,7 +96,7 @@ function AddModal({ onClickCloseModal }) {
     };
 
     const response = await axios.post(
-      "http://localhost:5000/account/save",
+      "http://193.122.105.156:5000/account/save",
       data
     );
 
@@ -107,7 +107,7 @@ function AddModal({ onClickCloseModal }) {
         [accountData.type]: accountData.amount,
       });
 
-      const response2 = await axios.get("http://localhost:5000/account", {
+      const response2 = await axios.get("http://193.122.105.156:5000/account", {
         params: { date: moment().format("YYYY-MM") },
       });
       dispatch({ type: "SET", account: response2.data });

@@ -134,7 +134,7 @@ function Calendar() {
   // 페이지 진입 시 현재 월의 전체 데이터 가져오기
   useEffect(() => {
     const fetchData = async () => {
-      const response = await axios.get("http://localhost:5000/account", {
+      const response = await axios.get("http://193.122.105.156:5000/account", {
         params: { date: date.format("YYYY-MM") },
       });
 
