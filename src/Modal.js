@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import styled from "styled-components";
+import moment from "moment";
 import { MdDelete } from "react-icons/md";
+import { useAccountDispatch } from "./AccountContext";
 
 const ModalStyle = styled.div`
   position: absolute;
@@ -68,9 +70,9 @@ const AccountItem = styled.div`
   padding: 3px 0;
 `;
 
-function Modal({ setAccount, modalDate }) {
+function Modal({ modalDate }) {
   const [accountDetail, setAccountDetail] = useState([]);
-  const [isMouseOverDelete, setIsMouseOverDelete] = useState(false);
+  const dispatch = useAccountDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,23 +84,28 @@ function Modal({ setAccount, modalDate }) {
     };
 
     fetchData();
-  }, [modalDate, accountDetail]);
+  }, [modalDate]);
 
-  const onClickDelete = useCallback(async (id) => {
-    const response = await axios.delete("http://localhost:5000/account", {
-      data: {
-        accountId: id,
-      },
-    });
-
-    if (response.data === "OK") {
-      const response = await axios.get("http://localhost:5000/account", {
-        params: { date: modalDate.format("YYYY-MM") },
+  const onClickDelete = useCallback(
+    async (id) => {
+      const response = await axios.delete("http://localhost:5000/account", {
+        data: {
+          accountId: id,
+        },
       });
 
-      setAccount(response.data);
-    }
-  }, []);
+      if (response.data === "OK") {
+        setAccountDetail(accountDetail.filter((account) => account.id !== id));
+
+        const response = await axios.get("http://localhost:5000/account", {
+          params: { date: moment().format("YYYY-MM") },
+        });
+
+        dispatch({ type: "SET", account: response.data });
+      }
+    },
+    [dispatch, accountDetail]
+  );
 
   return (
     <>

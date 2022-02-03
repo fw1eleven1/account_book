@@ -1,10 +1,11 @@
 import Calendar from "./Calendar";
+import { AccountProvider } from "./AccountContext";
 
 function App() {
   return (
-    <div>
+    <AccountProvider>
       <Calendar />
-    </div>
+    </AccountProvider>
   );
 }
 

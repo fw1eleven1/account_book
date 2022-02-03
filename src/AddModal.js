@@ -5,6 +5,7 @@ import moment from "moment";
 import Datepicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./css/datepicker.css";
+import { useAccountDispatch } from "./AccountContext";
 
 const ModalStyle = styled.div`
   position: absolute;
@@ -61,7 +62,7 @@ const Button = styled.div`
   }
 `;
 
-function AddModal({ account, setAccount, onClickCloseModal }) {
+function AddModal({ onClickCloseModal }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [accountData, setAccountData] = useState({
     type: "credit",
@@ -73,6 +74,8 @@ function AddModal({ account, setAccount, onClickCloseModal }) {
     credit: "",
     debit: "",
   });
+
+  const dispatch = useAccountDispatch();
 
   const onChangeData = useCallback(
     (e) => {
@@ -104,11 +107,14 @@ function AddModal({ account, setAccount, onClickCloseModal }) {
         [accountData.type]: accountData.amount,
       });
 
-      setAccount([...account, savedAccount]);
+      const response2 = await axios.get("http://localhost:5000/account", {
+        params: { date: moment().format("YYYY-MM") },
+      });
+      dispatch({ type: "SET", account: response2.data });
 
       onClickCancel();
     }
-  }, [account, savedAccount, accountData, selectedDate]);
+  }, [savedAccount, accountData, selectedDate, dispatch]);
 
   const onClickCancel = useCallback(() => {
     onClickCloseModal(false);
